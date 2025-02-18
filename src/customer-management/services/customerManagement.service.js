@@ -1,43 +1,39 @@
-const httpStatus = require('http-status');
-const ApiError = require('../utils/ApiError');
+const { Customer } = require('../../models');
+const { throwBadRequest } = require('../../utils/errorHandling');
 
-const getDish = async (userBody) => {
-  if (await User.isEmailTaken(userBody.email)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
-  }
-  return User.create(userBody);
+const getCustomer = async (customerId) => {
+  const customer = await Customer.findById(customerId);
+  throwBadRequest(!customer, 'Không tìm thấy khách hàng');
+  return customer;
 };
 
-const createDish = async (filter, options) => {
-  const users = await User.paginate(filter, options);
-  return users;
+const createCustomer = async (createBody) => {
+  const customer = await Customer.create(createBody);
+  return customer;
 };
 
-const updateDish = async (id) => {
-  return User.findById(id);
+const updateCustomer = async (customerId, updateBody) => {
+  const customer = await Customer.findByIdAndUpdate(
+    customerId,
+    {
+      $set: updateBody,
+    },
+    { new: true }
+  );
+  throwBadRequest(!customer, 'Không tìm thấy khách hàng');
+  return customer;
 };
 
-const deleteDish = async (email) => {
-  return User.findOne({ email });
+const deleteCustomer = async (customerId) => {
+  await Customer.deleteOne({ _id: customerId });
 };
 
-const getDishes = async (userId, updateBody) => {
-  const user = await getUserById(userId);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  if (updateBody.email && (await User.isEmailTaken(updateBody.email, userId))) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
-  }
-  Object.assign(user, updateBody);
-  await user.save();
-  return user;
-};
+const getCustomers = async () => {};
 
 module.exports = {
-  getDish,
-  createDish,
-  updateDish,
-  deleteDish,
-  getDishes,
+  getCustomer,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  getCustomers,
 };

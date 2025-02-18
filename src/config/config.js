@@ -11,6 +11,7 @@ const envVarsSchema = Joi.object()
     MONGODB_URL: Joi.string().required().description('Mongo DB url'),
     REDIS_HORT: Joi.string().required().description('Redis hort'),
     REDIS_PORT: Joi.string().required().description('Redis port'),
+    JOB_KEY: Joi.string().required().description('Job key'),
     JWT_SECRET: Joi.string().required().description('JWT secret key'),
     JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(30).description('minutes after which access tokens expire'),
     JWT_REFRESH_EXPIRATION_DAYS: Joi.number().default(30).description('days after which refresh tokens expire'),
@@ -47,6 +48,7 @@ module.exports = {
   },
   redisHost: envVars.REDIS_HORT,
   redisPort: envVars.REDIS_PORT,
+  jobKey: envVars.JOB_KEY,
   jwt: {
     secret: envVars.JWT_SECRET,
     accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,

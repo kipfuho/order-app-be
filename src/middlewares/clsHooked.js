@@ -98,17 +98,17 @@ const getRestaurantTimeZone = () => {
 
 const getRestaurantCountry = () => {
   const restaurant = getRestaurantFromSession();
-  return _.get(restaurant, 'country') || countries.VietNam.name;
+  return _.get(restaurant, 'country.name') || countries.VietNam.name;
 };
 
 const getRestaurantCurrency = () => {
   const restaurant = getRestaurantFromSession();
-  return _.get(restaurant, 'currency') || countries.VietNam.currency;
+  return _.get(restaurant, 'country.currency') || countries.VietNam.currency;
 };
 
 const getRestaurantLang = () => {
   const restaurant = getRestaurantFromSession();
-  const country = _.get(restaurant, 'country');
+  const country = _.get(restaurant, 'country.name');
   if (country === countries.VietNam.name) {
     return 'vi';
   }

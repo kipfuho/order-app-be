@@ -11,6 +11,11 @@ const restaurantSchema = mongoose.Schema(
     dishPriceRoundingType: { type: String },
     discountRoundingType: { type: String },
     taxRoundingType: { type: String },
+    country: {
+      name: { type: String },
+      currency: { type: String },
+    },
+    utcOffset: { type: Number },
   },
   {
     timestamps: true,

@@ -9,6 +9,11 @@ const tablePositionSchema = mongoose.Schema(
         type: mongoose.Types.ObjectId,
       },
     ],
+    tables: [
+      {
+        name: { type: String },
+      },
+    ],
   },
   {
     timestamps: true,

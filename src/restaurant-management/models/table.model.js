@@ -4,13 +4,7 @@ const { toJSON } = require('../../models/plugins');
 const tablePositionSchema = mongoose.Schema(
   {
     name: { type: String },
-    dishCategories: [
-      {
-        type: mongoose.Types.ObjectId,
-        ref: 'DishCategory',
-      },
-    ],
-    tables: [{ type: mongoose.Types.ObjectId, ref: 'Table' }],
+    tablePosition: { type: mongoose.Types.ObjectId },
   },
   {
     timestamps: true,
@@ -20,6 +14,6 @@ const tablePositionSchema = mongoose.Schema(
 // add plugin that converts mongoose to json
 tablePositionSchema.plugin(toJSON);
 
-const TablePosition = mongoose.model('TablePosition', tablePositionSchema);
+const Table = mongoose.model('Table', tablePositionSchema);
 
-module.exports = TablePosition;
+module.exports = Table;

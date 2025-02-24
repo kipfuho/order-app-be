@@ -3,7 +3,7 @@ const { toJSON } = require('../../models/plugins');
 
 const dishOrderSchema = mongoose.Schema(
   {
-    dishId: { type: mongoose.Types.ObjectId, ref: 'Dish' },
+    dish: { type: mongoose.Types.ObjectId, ref: 'Dish' },
     orderSessionId: { type: mongoose.Types.ObjectId, ref: 'OrderSession' },
     name: { type: String },
     unit: { type: String },
@@ -17,6 +17,7 @@ const dishOrderSchema = mongoose.Schema(
     afterTaxTotalDiscountAmount: { type: Number },
     taxTotalDiscountAmount: { type: Number },
     paymentAmount: { type: Number }, // after discount, after tax
+    status: { type: String },
   },
   {
     timestamps: true,

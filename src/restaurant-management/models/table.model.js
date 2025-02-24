@@ -3,8 +3,10 @@ const { toJSON } = require('../../models/plugins');
 
 const tablePositionSchema = mongoose.Schema(
   {
+    restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
     name: { type: String },
     tablePosition: { type: mongoose.Types.ObjectId },
+    status: { type: String },
   },
   {
     timestamps: true,

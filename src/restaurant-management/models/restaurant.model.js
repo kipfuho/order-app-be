@@ -3,6 +3,7 @@ const { toJSON } = require('../../models/plugins');
 
 const restaurantSchema = mongoose.Schema(
   {
+    status: { type: String },
     name: { type: String },
     phone: { type: String },
     email: { type: String },

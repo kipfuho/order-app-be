@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
 
-const dishCategorySchema = mongoose.Schema(
+const employeePositionSchema = mongoose.Schema(
   {
     restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
     name: { type: String },
     status: { type: String },
+    permissions: [String],
   },
   {
     timestamps: true,
@@ -13,8 +14,8 @@ const dishCategorySchema = mongoose.Schema(
 );
 
 // add plugin that converts mongoose to json
-dishCategorySchema.plugin(toJSON);
+employeePositionSchema.plugin(toJSON);
 
-const DishCategory = mongoose.model('DishCategory', dishCategorySchema);
+const EmployeePosition = mongoose.model('EmployeePosition', employeePositionSchema);
 
-module.exports = DishCategory;
+module.exports = EmployeePosition;

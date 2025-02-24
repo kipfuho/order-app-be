@@ -3,7 +3,7 @@ const { toJSON } = require('../../models/plugins');
 
 const discountProductSchema = mongoose.Schema(
   {
-    dishId: { type: mongoose.Types.ObjectId, ref: 'Dish' },
+    dish: { type: mongoose.Types.ObjectId, ref: 'Dish' },
     dishName: { type: String },
     dishQuantity: { type: String },
     discountType: { type: String }, // discount invoice, discount product
@@ -43,6 +43,7 @@ const orderSessionSchema = mongoose.Schema(
     orderSessionNo: { type: Number },
     endedAt: { type: Date },
     auditedAt: { type: Date },
+    status: { type: String },
   },
   {
     timestamps: true,

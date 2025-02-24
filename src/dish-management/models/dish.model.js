@@ -3,6 +3,7 @@ const { toJSON } = require('../../models/plugins');
 
 const dishSchema = mongoose.Schema(
   {
+    restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
     name: { type: String },
     price: {
       type: Number,
@@ -12,6 +13,8 @@ const dishSchema = mongoose.Schema(
       ref: 'DishCategory',
     },
     type: { type: String },
+    taxRate: { type: Number },
+    status: { type: String },
   },
   {
     timestamps: true,

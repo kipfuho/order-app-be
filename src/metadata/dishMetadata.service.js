@@ -2,8 +2,8 @@ const _ = require('lodash');
 const redisClient = require('../utils/redis');
 const { getSession, setSession } = require('../middlewares/clsHooked');
 const { Dish } = require('../models');
-
-const _getKey = ({ restaurantId }) => `menuFull_${restaurantId}`;
+const { getMenuKey } = require('./common');
+const constant = require('../utils/constant');
 
 const _getDishesFromClsHook = ({ key }) => {
   const menuVal = getSession({ key });
@@ -15,7 +15,7 @@ const getDishFromCache = async ({ restaurantId, dishId }) => {
   if (!dishId) {
     return;
   }
-  const key = _getKey({ restaurantId });
+  const key = getMenuKey({ restaurantId });
   const clsHookDishes = _getDishesFromClsHook({ key });
   if (!_.isEmpty(clsHookDishes)) {
     return _.find(clsHookDishes, (dish) => dish.id === dishId);
@@ -35,7 +35,7 @@ const getDishFromCache = async ({ restaurantId, dishId }) => {
 };
 
 const getDishesFromCache = async ({ restaurantId }) => {
-  const key = _getKey({ restaurantId });
+  const key = getMenuKey({ restaurantId });
   const clsHookDishes = _getDishesFromClsHook({ key });
   if (!_.isEmpty(clsHookDishes)) {
     return clsHookDishes;
@@ -49,13 +49,13 @@ const getDishesFromCache = async ({ restaurantId }) => {
       return dishes;
     }
 
-    const dishModels = await Dish.find({ restaurantId, status: 'enabled' }).populate('category');
+    const dishModels = await Dish.find({ restaurantId, status: constant.status.enabled }).populate('category');
     const dishesJson = dishModels.map((dish) => dish.toJSON());
     redisClient.putJson({ key, jsonVal: { ...menuVal, dishes: dishesJson } });
     return dishesJson;
   }
 
-  const dishes = await Dish.find({ restaurantId, status: 'enabled' }).populate('category');
+  const dishes = await Dish.find({ restaurantId, status: constant.status.enabled }).populate('category');
   const dishesJson = dishes.map((dish) => dish.toJSON());
   return dishesJson;
 };

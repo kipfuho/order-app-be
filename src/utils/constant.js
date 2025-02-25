@@ -12,8 +12,14 @@ const countries = {
   },
 };
 
+const status = {
+  enabled: 'enabled',
+  disabled: 'disabled',
+};
+
 module.exports = {
   SESSION_NAME_SPACE,
   language,
   countries,
+  status,
 };

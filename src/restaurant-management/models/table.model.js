@@ -5,7 +5,7 @@ const tablePositionSchema = mongoose.Schema(
   {
     restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
     name: { type: String },
-    tablePosition: { type: mongoose.Types.ObjectId },
+    position: { type: mongoose.Types.ObjectId, ref: 'TablePosition' },
     status: { type: String },
   },
   {

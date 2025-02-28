@@ -8,3 +8,4 @@ module.exports.DishCategory = require('../dish-management/models/dishCategory.mo
 module.exports.Customer = require('../customer-management/models/customer.model');
 module.exports.Employee = require('../restaurant-management/models/employee.model');
 module.exports.EmployeePosition = require('../restaurant-management/models/employeePosition.model');
+module.exports.Department = require('../restaurant-management/models/department.model');

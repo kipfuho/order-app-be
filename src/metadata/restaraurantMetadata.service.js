@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const redisClient = require('../utils/redis');
 const { getSession, setSession } = require('../middlewares/clsHooked');
-const { Restaurant, Table, TablePosition, Employee, EmployeePosition } = require('../models');
+const { Restaurant, Table, TablePosition, Employee, EmployeePosition, Department } = require('../models');
 const { getRestaurantKey } = require('./common');
 const constant = require('../utils/constant');
 
@@ -33,6 +33,12 @@ const _getEmployeePositionsFromClsHook = ({ key }) => {
   const restarantVal = getSession({ key });
   const employeePositions = _.get(restarantVal, 'employees');
   return employeePositions;
+};
+
+const _getDepartmentsFromClsHook = ({ key }) => {
+  const restarantVal = getSession({ key });
+  const departments = _.get(restarantVal, 'departments');
+  return departments;
 };
 
 const getRestaurantFromCache = async ({ restaurantId }) => {
@@ -265,6 +271,55 @@ const getEmployeePositionsFromCache = async ({ restaurantId }) => {
   return employeePositionsJson;
 };
 
+const getDepartmentFromCache = async ({ restaurantId, departmentId }) => {
+  if (!departmentId) {
+    return;
+  }
+  const key = getRestaurantKey({ restaurantId });
+  const clsHookDepartments = _getEmployeePositionsFromClsHook({ key });
+  if (!_.isEmpty(clsHookDepartments)) {
+    return _.find(clsHookDepartments, (department) => department.id === departmentId);
+  }
+
+  if (redisClient.isRedisConnected()) {
+    const restaurantVal = await redisClient.getJson(key);
+    const departments = _.get(restaurantVal, 'departments');
+    setSession({ key, value: { departments } });
+    if (!_.isEmpty(departments)) {
+      return _.find(departments, (department) => department.id === departmentId);
+    }
+  }
+
+  const department = await Department.findById(departmentId);
+  return department.toJSON();
+};
+
+const getDepartmentsFromCache = async ({ restaurantId }) => {
+  const key = getRestaurantKey({ restaurantId });
+  const clsHookDepartments = _getDepartmentsFromClsHook({ key });
+  if (!_.isEmpty(clsHookDepartments)) {
+    return clsHookDepartments;
+  }
+
+  if (redisClient.isRedisConnected()) {
+    const restaurantVal = await redisClient.getJson(key);
+    const departments = _.get(restaurantVal, 'departments');
+    if (!_.isEmpty(departments)) {
+      setSession({ key, value: restaurantVal });
+      return departments;
+    }
+
+    const departmentModels = await Department.find({ restaurantId, status: constant.status.enabled });
+    const departmentsJson = departmentModels.map((department) => department.toJSON());
+    redisClient.putJson({ key, jsonVal: { ...restaurantVal, departments: departmentsJson } });
+    return departmentsJson;
+  }
+
+  const departments = await EmployeePosition.find({ restaurantId, status: constant.status.enabled });
+  const departmentsJson = departments.map((department) => department.toJSON());
+  return departmentsJson;
+};
+
 module.exports = {
   getRestaurantFromCache,
   getTableFromCache,
@@ -275,4 +330,6 @@ module.exports = {
   getEmployeesFromCache,
   getEmployeePositionFromCache,
   getEmployeePositionsFromCache,
+  getDepartmentFromCache,
+  getDepartmentsFromCache,
 };

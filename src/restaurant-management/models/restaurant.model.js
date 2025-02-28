@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
+const { status } = require('../../utils/constant');
 
 const restaurantSchema = mongoose.Schema(
   {
-    status: { type: String },
+    status: { type: String, enum: [status.enabled, status.disabled], default: status.enabled },
     name: { type: String },
     phone: { type: String },
     email: { type: String },

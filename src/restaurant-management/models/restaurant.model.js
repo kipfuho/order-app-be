@@ -17,7 +17,16 @@ const restaurantSchema = mongoose.Schema(
       name: { type: String },
       currency: { type: String },
     },
-    utcOffset: { type: Number },
+    utcOffset: { type: Number, default: 7 },
+    /**
+     * Timezone string of moment.js
+     * https://gist.github.com/diogocapela/12c6617fc87607d11fd62d2a4f42b02a
+     */
+    timezone: {
+      type: String,
+      default: 'Asia/Ho_Chi_Minh',
+    },
+    reportTime: { type: Number, default: 0 },
   },
   {
     timestamps: true,

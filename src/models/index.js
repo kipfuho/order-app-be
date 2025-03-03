@@ -9,3 +9,6 @@ module.exports.Customer = require('../customer-management/models/customer.model'
 module.exports.Employee = require('../restaurant-management/models/employee.model');
 module.exports.EmployeePosition = require('../restaurant-management/models/employeePosition.model');
 module.exports.Department = require('../restaurant-management/models/department.model');
+module.exports.Order = require('../order-management/models/order.model');
+module.exports.OrderSession = require('../order-management/models/orderSession.model');
+module.exports.OrderSessionReport = require('../order-management/models/orderSessionReport.model');

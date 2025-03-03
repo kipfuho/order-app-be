@@ -4,10 +4,10 @@ const { toJSON } = require('../../models/plugins');
 const dishOrderSchema = mongoose.Schema(
   {
     dish: { type: mongoose.Types.ObjectId, ref: 'Dish' },
-    orderSessionId: { type: mongoose.Types.ObjectId, ref: 'OrderSession' },
     name: { type: String },
     unit: { type: String },
     price: { type: Number },
+    taxIncludedPrice: { type: Number },
     quantity: { type: String },
     beforeTaxTotalPrice: { type: Number },
     afterTaxTotalPrice: { type: Number },
@@ -26,9 +26,12 @@ const dishOrderSchema = mongoose.Schema(
 
 const orderSchema = mongoose.Schema(
   {
+    restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
+    table: { type: mongoose.Types.ObjectId, ref: 'Table' },
+    orderSession: { type: mongoose.Types.ObjectId, ref: 'OrderSession' },
+    orderNo: { type: Number },
     dishOrders: [dishOrderSchema],
     returnedDishOrders: [dishOrderSchema],
-    orderNo: { type: Number },
   },
   {
     timestamps: true,

@@ -5,7 +5,11 @@ const dishSchema = mongoose.Schema(
   {
     restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
     name: { type: String },
+    unit: { type: String },
     price: {
+      type: Number,
+    },
+    taxIncludedPrice: {
       type: Number,
     },
     category: {

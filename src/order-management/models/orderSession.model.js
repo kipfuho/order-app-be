@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
+const { getRestaurantFromCache } = require('../../metadata/restaraurantMetadata.service');
+const { getStartTimeOfToday } = require('../../utils/common');
 
 const discountProductSchema = mongoose.Schema(
   {
@@ -49,6 +51,30 @@ const orderSessionSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+orderSessionSchema.statics.getLastActiveOrderSessionBeforeCreatedAt = async function (restaurantId, createdAt) {
+  return this.findOne({
+    restaurantId: mongoose.Types.ObjectId(restaurantId),
+    createdAt: { $lt: createdAt },
+    orderSessionNo: { $exists: true },
+  }).sort({ createdAt: -1 });
+};
+
+orderSessionSchema.statics.getLastActiveOrderSessionSortByOrderSessionNo = async function (restaurantId) {
+  const restaurant = await getRestaurantFromCache({ restaurantId });
+  const startOfDay = getStartTimeOfToday({
+    timezone: restaurant.timezone || 'Asia/Ho_Chi_Minh',
+    reportTime: restaurant.reportTime || 0,
+  });
+  return this.findOne(
+    {
+      restaurantId: mongoose.Types.ObjectId(restaurantId),
+      orderSessionNo: { $exists: true },
+      createdAt: { $gte: startOfDay },
+    },
+    { createdAt: 1, orderSessionNo: 1 }
+  ).sort({ createdAt: -1 });
+};
 
 // add plugin that converts mongoose to json
 orderSessionSchema.plugin(toJSON);

@@ -58,13 +58,11 @@ const expireKey = async (key, seconds) => {
 };
 
 const getCloudLock = async ({ key, periodInSecond }) => {
+  if (!isRedisConnected() || env === 'test') {
+    return true;
+  }
+
   try {
-    if (env === 'test') {
-      return true;
-    }
-    if (!isRedisConnected()) {
-      return true;
-    }
     const currentDate = new Date().getTime();
     const currenDateStr = _.toString(currentDate);
     // dung setNX xem có lấy được khoá ko

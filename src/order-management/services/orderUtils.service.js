@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const moment = require('moment-timezone');
 const redisClient = require('../../utils/redis');
-const { getRestaurantFromCache } = require('../../metadata/restaraurantMetadata.service');
+const { getRestaurantFromCache, getTablesFromCache } = require('../../metadata/restaraurantMetadata.service');
 const { getRestaurantTimeZone } = require('../../middlewares/clsHooked');
 const { Order, OrderSession } = require('../../models');
 const { getDishesFromCache } = require('../../metadata/dishMetadata.service');
@@ -116,6 +116,68 @@ const createNewOrder = async ({ tableId, restaurantId, orderSessionId, newOrder,
   const order = await Order.create({ tableId, restaurantId, orderSessionId, orderNo, dishOrders });
 
   return order.toJSON();
+};
+
+/**
+ * Get order session json with populated datas
+ */
+const _getOrderSessionJson = async (orderSessionId) => {
+  const orderSession = await OrderSession.findById(orderSessionId);
+  const orderSessionJson = orderSession.toJSON();
+  const orders = await Order.find({ orderSessionId });
+
+  const restaurantId = orderSession.restaurant;
+  const restaurant = await getRestaurantFromCache({ restaurantId });
+  const tables = await getTablesFromCache({ restaurantId });
+  const tableById = _.keyBy(tables, 'id');
+  const dishes = await getDishesFromCache({ restaurantId });
+  const dishById = _.keyBy(dishes, 'id');
+
+  const orderJsons = _.map(orders, (order) => {
+    const orderJson = order.toJSON();
+    _.map(orderJson.dishOrders, (dishOrder) => {
+      if (dishOrder.dish) {
+        // eslint-disable-next-line no-param-reassign
+        dishOrder.dish = dishById[dishOrder.dish];
+      }
+    });
+    return orderJson;
+  });
+  orderSessionJson.restaurant = restaurant;
+  orderSessionJson.orders = orderJsons;
+  orderSessionJson.tables = _.map(orderSessionJson.tables, (tableId) => tableById[tableId]);
+  return {
+    orderSession,
+    orderSessionJson,
+  };
+};
+
+const calculateTax = async ({ orderSessionJson }) => {};
+const calculateDiscount = async ({ orderSessionJson }) => {};
+
+const getOrderSessionById = async (orderSessionId) => {
+  const { orderSession, orderSessionJson } = await _getOrderSessionJson({ orderSessionId });
+  const dishOrders = _.flatMap(orderSessionJson.orders, 'dishOrders');
+
+  const pretaxPaymentAmount = _.sumBy(dishOrders, (dishOrder) => dishOrder.price * dishOrder.quantity);
+  const { totalTaxAmount } = await calculateTax({ orderSessionJson });
+
+  const totalDiscountAmountAfterTax = calculateDiscount();
+
+  orderSessionJson.paymentAmount = Math.max(0, pretaxPaymentAmount + totalTaxAmount - totalDiscountAmountAfterTax);
+
+  // update order if not audited
+  if (!orderSession.auditedAt && orderSession.paymentAmount !== orderSessionJson.paymentAmount) {
+    await OrderSession.updateOne(
+      { _id: orderSessionId },
+      {
+        $set: {
+          paymentAmount: orderSessionJson.paymentAmount,
+        },
+      }
+    );
+  }
+  return orderSessionJson;
 };
 
 module.exports = {

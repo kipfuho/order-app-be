@@ -82,7 +82,7 @@ const getOrCreateOrderSession = async ({ orderSessionId, tableId, restaurantId }
   }
 
   const orderSessionNo = await getOrderSessionNoForNewOrderSession(restaurantId);
-  const orderSession = await OrderSession.create({ tableId, restaurantId, orderSessionNo });
+  const orderSession = await OrderSession.create({ tables: [tableId], restaurantId, orderSessionNo });
 
   return orderSession.toJSON();
 };

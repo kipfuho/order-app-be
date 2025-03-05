@@ -78,7 +78,7 @@ const getOrderSessions = async ({ restaurantId }) => {
 
   _.forEach(orderSessions, (orderSession) => {
     const orderSessionJson = orderSession.toJSON();
-    _.forEach(orderSessionJson.table, (tableId) => {
+    _.forEach(orderSessionJson.tables, (tableId) => {
       if (tableById[tableId]) {
         tableById[tableId].activeOrderSessions.push(orderSessionJson);
       }

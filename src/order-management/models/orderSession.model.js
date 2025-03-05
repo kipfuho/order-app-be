@@ -39,7 +39,7 @@ const discountSchema = mongoose.Schema(
 const orderSessionSchema = mongoose.Schema(
   {
     restaurant: { type: mongoose.Types.ObjectId, ref: 'Restaurant' },
-    table: [{ type: mongoose.Types.ObjectId, ref: 'Table' }],
+    tables: [{ type: mongoose.Types.ObjectId, ref: 'Table' }],
     orders: [{ type: mongoose.Types.ObjectId, ref: 'Order' }],
     discounts: [discountSchema],
     orderSessionNo: { type: Number },

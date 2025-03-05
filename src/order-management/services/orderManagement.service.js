@@ -1,6 +1,7 @@
 const _ = require('lodash');
-const { Order } = require('../../models');
+const { Order, OrderSession } = require('../../models');
 const orderUtilService = require('./orderUtils.service');
+const { getTablesFromCache } = require('../../metadata/restaraurantMetadata.service');
 
 const createOrder = async ({ tableId, restaurantId, orderSessionId, newOrder }) => {
   const orderSession = await orderUtilService.getOrCreateOrderSession({ orderSessionId, tableId, restaurantId });
@@ -36,8 +37,8 @@ const updateOrder = async ({ orderUpdates }) => {
     _.map(orders, (order) => order.toJSON()),
     'id'
   );
-  // eslint-disable-next-line no-restricted-syntax
-  for (const orderUpdate of orderUpdates) {
+
+  _.forEach(orderUpdates, (orderUpdate) => {
     const order = orderById[orderUpdate.orderId];
     if (order) {
       // more optimize may be?
@@ -46,7 +47,7 @@ const updateOrder = async ({ orderUpdates }) => {
         dishOrder.quantity = orderUpdate.quantity;
       }
     }
-  }
+  });
 
   const bulkOps = [];
   _.forEach(orderById, (order) => {
@@ -65,39 +66,75 @@ const updateOrder = async ({ orderUpdates }) => {
   await Order.bulkWrite(bulkOps);
 };
 
-const getOrders = () => {};
+const getOrderSessions = async ({ restaurantId }) => {
+  const tables = await getTablesFromCache({ restaurantId });
+  const orderSessions = await OrderSession.find({ restaurantId });
+  const tableById = _.keyBy(tables, 'id');
 
-const getOrderDetail = () => {};
+  _.forEach(tables, (table) => {
+    // eslint-disable-next-line no-param-reassign
+    table.activeOrderSessions = [];
+  });
 
-const payOrder = () => {};
+  _.forEach(orderSessions, (orderSession) => {
+    const orderSessionJson = orderSession.toJSON();
+    _.forEach(orderSessionJson.table, (tableId) => {
+      if (tableById[tableId]) {
+        tableById[tableId].activeOrderSessions.push(orderSessionJson);
+      }
+    });
+  });
 
-const cancelOrder = () => {};
+  return tables;
+};
 
-const cancelPaidStatus = () => {};
+const getOrderSessionDetail = async ({ orderSessionId }) => {
+  const orderSessionJson = await orderUtilService.getOrderSessionById({ orderSessionId });
+  return orderSessionJson;
+};
 
-const getOrderHistory = () => {};
+const payOrderSession = async ({ orderSessionId }) => {
+  const orderSessionJson = await orderUtilService.confirmPaymentOrderSession({ orderSessionId });
+  return orderSessionJson;
+};
 
-const updateCart = () => {};
+const cancelOrder = async ({ orderSessionId }) => {
+  const orderSessionJson = await orderUtilService.updateOrderSession({ orderSessionId });
+  return orderSessionJson;
+};
 
-const checkoutCart = () => {};
+const cancelPaidStatus = async ({ orderSessionId }) => {
+  const orderSessionJson = await orderUtilService.updateOrderSession({ orderSessionId });
+  return orderSessionJson;
+};
 
-const discountDish = () => {};
+const getOrderHistory = async ({ from, to }) => {
+  // replace with order session report
+  const orderSessions = await OrderSession.find({ createdAt: { $gte: from, $lt: to } });
+  return _.map(orderSessions, (orderSession) => orderSession.toJSON());
+};
 
-const discountOrder = () => {};
+const updateCart = async ({ updatedishRequests, cartId }) => {};
+
+const checkoutCart = async ({ cartId }) => {};
+
+const discountDish = async ({ dishOrderId, orderId }) => {};
+
+const discountOrderSession = async ({ orderSessionId }) => {};
 
 module.exports = {
   createOrder,
   increaseDishQuantity,
   decreaseDishQuantity,
   updateOrder,
-  getOrders,
-  getOrderDetail,
-  payOrder,
+  getOrderSessions,
+  getOrderSessionDetail,
+  payOrderSession,
   cancelOrder,
   cancelPaidStatus,
   getOrderHistory,
   updateCart,
   checkoutCart,
   discountDish,
-  discountOrder,
+  discountOrderSession,
 };

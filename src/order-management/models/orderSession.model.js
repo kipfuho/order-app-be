@@ -5,10 +5,9 @@ const { getStartTimeOfToday } = require('../../utils/common');
 
 const discountProductSchema = mongoose.Schema(
   {
-    dish: { type: mongoose.Types.ObjectId, ref: 'Dish' },
+    dishOrderId: { type: String },
     dishName: { type: String },
     dishQuantity: { type: String },
-    discountType: { type: String }, // discount invoice, discount product
     discountValue: { type: Number },
     discountValueType: { type: String }, // percentage, absolute amount
     beforeTaxTotalDiscountAmount: { type: Number },
@@ -43,6 +42,13 @@ const orderSessionSchema = mongoose.Schema(
     orders: [{ type: mongoose.Types.ObjectId, ref: 'Order' }],
     discounts: [discountSchema],
     orderSessionNo: { type: Number },
+    taxRate: { type: Number },
+    taxDetails: [
+      {
+        taxAmount: { type: Number },
+        taxRate: { type: Number },
+      },
+    ],
     endedAt: { type: Date },
     auditedAt: { type: Date },
     status: { type: String },

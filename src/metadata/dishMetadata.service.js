@@ -49,13 +49,13 @@ const getDishesFromCache = async ({ restaurantId }) => {
       return dishes;
     }
 
-    const dishModels = await Dish.find({ restaurantId, status: constant.status.enabled }).populate('category');
+    const dishModels = await Dish.find({ restaurantId, status: constant.Status.enabled }).populate('category');
     const dishesJson = dishModels.map((dish) => dish.toJSON());
     redisClient.putJson({ key, jsonVal: { ...menuVal, dishes: dishesJson } });
     return dishesJson;
   }
 
-  const dishes = await Dish.find({ restaurantId, status: constant.status.enabled }).populate('category');
+  const dishes = await Dish.find({ restaurantId, status: constant.Status.enabled }).populate('category');
   const dishesJson = dishes.map((dish) => dish.toJSON());
   return dishesJson;
 };

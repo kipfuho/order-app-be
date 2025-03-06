@@ -1,5 +1,7 @@
+const _ = require('lodash');
 const moment = require('moment-timezone');
-const { getRestaurantTimeZone } = require('../middlewares/clsHooked');
+const { getRestaurantTimeZone, getRestaurantCurrency, getRestaurantFromSession } = require('../middlewares/clsHooked');
+const constant = require('./constant');
 
 const sleep = (msec) => new Promise((resolve) => setTimeout(resolve, msec));
 
@@ -19,8 +21,50 @@ const formatDateTime = ({ dateTime, format, timeZone }) => {
 
 const formatDateDDMMYYYY = (dateTime, timeZone) => formatDateTime({ dateTime, timeZone, format: 'DD/MM/YYYY' });
 
+const getCurrencyPrecision = (currency) => {
+  if (!currency) {
+    // eslint-disable-next-line no-param-reassign
+    currency = getRestaurantCurrency();
+  }
+
+  return constant.CurrencySetting[currency];
+};
+
+const _getRoundPrice = (price, type) => {
+  let p = 0;
+  try {
+    const restaurant = getRestaurantFromSession();
+    p = getCurrencyPrecision({ country: _.get(restaurant, 'country.currency') });
+    switch (_.get(restaurant, type)) {
+      case constant.RoundingPaymentType.FLOOR:
+        return _.floor(price, p);
+      case constant.RoundingPaymentType.CEIL:
+        return _.ceil(price, p);
+      default:
+        return _.round(price, p);
+    }
+  } catch (err) {
+    return _.round(price, p);
+  }
+};
+
+const getRoundDishPrice = (amount) => {
+  return _getRoundPrice(amount, 'dishPriceRoundingType');
+};
+
+const getRoundDiscountAmount = (amount) => {
+  return _getRoundPrice(amount, 'discountRoundingType');
+};
+
+const getRoundTaxAmount = (amount) => {
+  return _getRoundPrice(amount, 'taxRoundingType');
+};
+
 module.exports = {
   sleep,
   getStartTimeOfToday,
   formatDateDDMMYYYY,
+  getRoundDishPrice,
+  getRoundDiscountAmount,
+  getRoundTaxAmount,
 };

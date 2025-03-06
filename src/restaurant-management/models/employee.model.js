@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
-const { status } = require('../../utils/constant');
+const { Status } = require('../../utils/constant');
 
 const employeeSchema = mongoose.Schema(
   {
@@ -8,7 +8,7 @@ const employeeSchema = mongoose.Schema(
     user: { type: mongoose.Types.ObjectId, ref: 'User' },
     name: { type: String },
     position: { type: mongoose.Types.ObjectId, ref: 'EmployeePosition' },
-    status: { type: String, enum: [status.enabled, status.disabled], default: status.enabled },
+    status: { type: String, enum: [Status.enabled, Status.disabled], default: Status.enabled },
     permissions: [String],
   },
   {

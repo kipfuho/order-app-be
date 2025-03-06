@@ -56,13 +56,13 @@ const getRestaurantFromCache = async ({ restaurantId }) => {
       return restaurant;
     }
 
-    const restaurantModel = await Restaurant.find({ _id: restaurantId, status: constant.status.enabled });
+    const restaurantModel = await Restaurant.find({ _id: restaurantId, status: constant.Status.enabled });
     const restaurantJson = restaurantModel.toJSON();
     redisClient.putJson({ key, jsonVal: { ...restarantVal, restaurant: restaurantJson } });
     return restaurantJson;
   }
 
-  const restaurant = await Restaurant.find({ _id: restaurantId, status: constant.status.enabled });
+  const restaurant = await Restaurant.find({ _id: restaurantId, status: constant.Status.enabled });
   const restaurantJson = restaurant.toJSON();
   return restaurantJson;
 };
@@ -105,13 +105,13 @@ const getTablesFromCache = async ({ restaurantId }) => {
       return tables;
     }
 
-    const tableModels = await Table.find({ restaurantId, status: constant.status.enabled }).populate('position');
+    const tableModels = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
     const tablesJson = tableModels.map((table) => table.toJSON());
     redisClient.putJson({ key, jsonVal: { ...restaurantVal, tables: tablesJson } });
     return tablesJson;
   }
 
-  const tables = await Table.find({ restaurantId, status: constant.status.enabled }).populate('position');
+  const tables = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
   const tablesJson = tables.map((table) => table.toJSON());
   return tablesJson;
 };
@@ -154,7 +154,7 @@ const getTablePositionsFromCache = async ({ restaurantId }) => {
       return tablePostions;
     }
 
-    const tablePostionModels = await TablePosition.find({ restaurantId, status: constant.status.enabled })
+    const tablePostionModels = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
       .populate('employeeCategories')
       .populate('tables');
     const tablePostionsJson = tablePostionModels.map((tablePostion) => tablePostion.toJSON());
@@ -162,7 +162,7 @@ const getTablePositionsFromCache = async ({ restaurantId }) => {
     return tablePostionsJson;
   }
 
-  const tablePostions = await TablePosition.find({ restaurantId, status: constant.status.enabled })
+  const tablePostions = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
     .populate('employeeCategories')
     .populate('tables');
   const tablePostionsJson = tablePostions.map((tablePostion) => tablePostion.toJSON());
@@ -207,7 +207,7 @@ const getEmployeesFromCache = async ({ restaurantId }) => {
       return employees;
     }
 
-    const employeeModels = await Employee.find({ restaurantId, status: constant.status.enabled })
+    const employeeModels = await Employee.find({ restaurantId, status: constant.Status.enabled })
       .populate('user')
       .populate('position');
     const employeesJson = employeeModels.map((employee) => employee.toJSON());
@@ -215,7 +215,7 @@ const getEmployeesFromCache = async ({ restaurantId }) => {
     return employeesJson;
   }
 
-  const employees = await Employee.find({ restaurantId, status: constant.status.enabled })
+  const employees = await Employee.find({ restaurantId, status: constant.Status.enabled })
     .populate('user')
     .populate('position');
   const employeesJson = employees.map((employee) => employee.toJSON());
@@ -260,13 +260,13 @@ const getEmployeePositionsFromCache = async ({ restaurantId }) => {
       return employeePositions;
     }
 
-    const employeePositionModels = await EmployeePosition.find({ restaurantId, status: constant.status.enabled });
+    const employeePositionModels = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
     const employeePositionsJson = employeePositionModels.map((employeePosition) => employeePosition.toJSON());
     redisClient.putJson({ key, jsonVal: { ...restaurantVal, employeePositions: employeePositionsJson } });
     return employeePositionsJson;
   }
 
-  const employeePositions = await EmployeePosition.find({ restaurantId, status: constant.status.enabled });
+  const employeePositions = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
   const employeePositionsJson = employeePositions.map((employeePosition) => employeePosition.toJSON());
   return employeePositionsJson;
 };
@@ -309,13 +309,13 @@ const getDepartmentsFromCache = async ({ restaurantId }) => {
       return departments;
     }
 
-    const departmentModels = await Department.find({ restaurantId, status: constant.status.enabled });
+    const departmentModels = await Department.find({ restaurantId, status: constant.Status.enabled });
     const departmentsJson = departmentModels.map((department) => department.toJSON());
     redisClient.putJson({ key, jsonVal: { ...restaurantVal, departments: departmentsJson } });
     return departmentsJson;
   }
 
-  const departments = await EmployeePosition.find({ restaurantId, status: constant.status.enabled });
+  const departments = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
   const departmentsJson = departments.map((department) => department.toJSON());
   return departmentsJson;
 };

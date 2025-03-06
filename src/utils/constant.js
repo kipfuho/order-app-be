@@ -1,25 +1,55 @@
 const SESSION_NAME_SPACE = 'userSession';
 
-const language = {
+const Language = {
   vietnamese: 'vi',
   english: 'en',
 };
 
-const countries = {
+const Countries = {
   VietNam: {
     name: 'Việt Nam',
     currency: 'VND',
   },
 };
 
-const status = {
+const CurrencySetting = {
+  VND: {
+    precision: 0,
+  },
+  USD: {
+    precision: 2,
+  },
+};
+
+const RoundingPaymentType = {
+  NO_ROUND: 'NO_ROUND',
+  ROUND: 'ROUND',
+  FLOOR: 'FLOOR',
+  CEIL: 'CEIL',
+};
+
+const Status = {
   enabled: 'enabled',
   disabled: 'disabled',
 };
 
+const OrderSessionDiscountType = {
+  INVOICE: 'INVOICE',
+  PRODUCT: 'PRODUCT',
+};
+
+const DiscountValueType = {
+  PERCENTAGE: 'PERCENTAGE',
+  ABSOLUTE: 'ABSOLUTE',
+};
+
 module.exports = {
   SESSION_NAME_SPACE,
-  language,
-  countries,
-  status,
+  Language,
+  Countries,
+  Status,
+  CurrencySetting,
+  RoundingPaymentType,
+  OrderSessionDiscountType,
+  DiscountValueType,
 };

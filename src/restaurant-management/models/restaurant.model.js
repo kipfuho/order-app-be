@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
-const { status } = require('../../utils/constant');
+const { Status } = require('../../utils/constant');
 
 const restaurantSchema = mongoose.Schema(
   {
-    status: { type: String, enum: [status.enabled, status.disabled], default: status.enabled },
+    status: { type: String, enum: [Status.enabled, Status.disabled], default: Status.enabled },
     name: { type: String },
     phone: { type: String },
     email: { type: String },
@@ -13,6 +13,9 @@ const restaurantSchema = mongoose.Schema(
     dishPriceRoundingType: { type: String },
     discountRoundingType: { type: String },
     taxRoundingType: { type: String },
+    calculateTaxDirectly: {
+      type: Boolean,
+    },
     country: {
       name: { type: String },
       currency: { type: String },

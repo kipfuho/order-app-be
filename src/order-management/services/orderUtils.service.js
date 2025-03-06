@@ -5,6 +5,7 @@ const { getRestaurantFromCache, getTablesFromCache } = require('../../metadata/r
 const { getRestaurantTimeZone } = require('../../middlewares/clsHooked');
 const { Order, OrderSession } = require('../../models');
 const { getDishesFromCache } = require('../../metadata/dishMetadata.service');
+const { OrderSessionDiscountType, DiscountValueType } = require('../../utils/constant');
 
 const formatDateTimeToISOStringRegardingReportTime = ({ dateTime, reportTime }) => {
   try {
@@ -81,8 +82,14 @@ const getOrCreateOrderSession = async ({ orderSessionId, tableId, restaurantId }
     return orderSession;
   }
 
+  const restaurant = await getRestaurantFromCache({ restaurantId });
   const orderSessionNo = await getOrderSessionNoForNewOrderSession(restaurantId);
-  const orderSession = await OrderSession.create({ tables: [tableId], restaurantId, orderSessionNo });
+  const orderSession = await OrderSession.create({
+    tables: [tableId],
+    restaurantId,
+    orderSessionNo,
+    taxRate: _.get(restaurant, 'taxRate', 0),
+  });
 
   return orderSession.toJSON();
 };
@@ -152,17 +159,114 @@ const _getOrderSessionJson = async (orderSessionId) => {
   };
 };
 
-const calculateTax = async ({ orderSessionJson }) => {};
-const calculateDiscount = async ({ orderSessionJson }) => {};
+const calculateTax = async ({ orderSessionJson, dishOrders, calculateTaxDirectly = false }) => {
+  let totalTaxAmount = 0;
+  const taxAmountByTaxRate = {};
+  const restaurantTaxRate = _.get(orderSessionJson, 'taxRate');
+  _.forEach(dishOrders, (dishOrder) => {
+    let dishTaxRate = dishOrder.taxRate;
+    const beforeTaxPrice = dishOrder.price;
+
+    if (restaurantTaxRate < 0.001) {
+      dishTaxRate = 0;
+      // eslint-disable-next-line no-param-reassign
+      dishOrder.taxIncludedPrice = dishOrder.price;
+    }
+
+    const afterTaxPrice = dishOrder.taxIncludedPrice || (beforeTaxPrice * (100 + dishTaxRate)) / 100;
+    let beforeTaxTotalPrice;
+    let afterTaxTotalPrice;
+    let taxAmount;
+    if (calculateTaxDirectly) {
+      beforeTaxTotalPrice = beforeTaxPrice * (dishOrder.quantity || 1);
+      afterTaxTotalPrice = beforeTaxTotalPrice;
+      taxAmount = afterTaxTotalPrice - beforeTaxTotalPrice;
+    } else {
+      beforeTaxTotalPrice = beforeTaxPrice * (dishOrder.quantity || 1);
+      afterTaxTotalPrice = (afterTaxPrice * (100 + dishTaxRate)) / 100;
+      taxAmount = afterTaxTotalPrice - beforeTaxTotalPrice;
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    dishOrder.beforeTaxTotalPrice = beforeTaxTotalPrice;
+    // eslint-disable-next-line no-param-reassign
+    dishOrder.afterTaxTotalPrice = afterTaxTotalPrice;
+    // eslint-disable-next-line no-param-reassign
+    dishOrder.taxAmount = taxAmount;
+
+    if (taxAmount) {
+      totalTaxAmount += taxAmount;
+      taxAmountByTaxRate[dishTaxRate] = (taxAmountByTaxRate[dishTaxRate] || 0) + taxAmount;
+    }
+  });
+
+  const taxDetails = _.map(taxAmountByTaxRate, (taxAmount, taxRate) => ({ taxRate, taxAmount }));
+  return {
+    totalTaxAmount,
+    taxDetails,
+  };
+};
+
+const _calculateDiscountOnInvoice = ({ discount, pretaxPaymentAmount, totalTaxAmount }) => {
+  const { discountValue, discountValueType } = discount;
+
+  let beforeTaxTotalDiscountAmount;
+  let afterTaxTotalDiscountAmount;
+  let taxTotalDiscountAmount;
+
+  if (discountValueType === DiscountValueType.PERCENTAGE) {
+    beforeTaxTotalDiscountAmount = (pretaxPaymentAmount * discountValue) / 100;
+    afterTaxTotalDiscountAmount = ((pretaxPaymentAmount + totalTaxAmount) * discountValue) / 100;
+    taxTotalDiscountAmount = afterTaxTotalDiscountAmount - beforeTaxTotalDiscountAmount;
+  } else {
+    beforeTaxTotalDiscountAmount = (pretaxPaymentAmount * discountValue) / 100;
+    afterTaxTotalDiscountAmount = ((pretaxPaymentAmount + totalTaxAmount) * discountValue) / 100;
+    taxTotalDiscountAmount = afterTaxTotalDiscountAmount - beforeTaxTotalDiscountAmount;
+  }
+
+  // eslint-disable-next-line no-param-reassign
+  discount.beforeTaxTotalDiscountAmount = beforeTaxTotalDiscountAmount;
+  // eslint-disable-next-line no-param-reassign
+  discount.afterTaxTotalDiscountAmount = afterTaxTotalDiscountAmount;
+  // eslint-disable-next-line no-param-reassign
+  discount.taxTotalDiscountAmount = taxTotalDiscountAmount;
+
+  return afterTaxTotalDiscountAmount;
+};
+
+const _calculateDiscountOnProduct = ({ discount, pretaxPaymentAmount, totalTaxAmount }) => {};
+
+const _calculateDiscountByDiscountType = {
+  [OrderSessionDiscountType.INVOICE]: _calculateDiscountOnInvoice,
+  [OrderSessionDiscountType.PRODUCT]: _calculateDiscountOnProduct,
+};
+
+const calculateDiscount = async ({ orderSessionJson, pretaxPaymentAmount, totalTaxAmount }) => {
+  const discounts = _.get(orderSessionJson, 'discounts', []);
+
+  if (_.isEmpty(discounts)) {
+    return 0;
+  }
+
+  let totalDiscountAmountAfterTax = 0;
+  _.forEach(discounts, (discount) => {
+    totalDiscountAmountAfterTax += _calculateDiscountByDiscountType[discount.discountType]({
+      discount,
+      pretaxPaymentAmount,
+      totalTaxAmount,
+    });
+  });
+  return totalDiscountAmountAfterTax;
+};
 
 const getOrderSessionById = async (orderSessionId) => {
   const { orderSession, orderSessionJson } = await _getOrderSessionJson({ orderSessionId });
   const dishOrders = _.flatMap(orderSessionJson.orders, 'dishOrders');
 
   const pretaxPaymentAmount = _.sumBy(dishOrders, (dishOrder) => dishOrder.price * dishOrder.quantity);
-  const { totalTaxAmount } = await calculateTax({ orderSessionJson });
+  const { totalTaxAmount, taxDetails } = await calculateTax({ orderSessionJson, dishOrders });
 
-  const totalDiscountAmountAfterTax = calculateDiscount();
+  const totalDiscountAmountAfterTax = calculateDiscount({ orderSessionJson, pretaxPaymentAmount, totalTaxAmount });
 
   orderSessionJson.paymentAmount = Math.max(0, pretaxPaymentAmount + totalTaxAmount - totalDiscountAmountAfterTax);
 
@@ -173,6 +277,7 @@ const getOrderSessionById = async (orderSessionId) => {
       {
         $set: {
           paymentAmount: orderSessionJson.paymentAmount,
+          taxDetails: orderSessionJson.taxDetails,
         },
       }
     );
@@ -183,4 +288,5 @@ const getOrderSessionById = async (orderSessionId) => {
 module.exports = {
   createNewOrder,
   getOrCreateOrderSession,
+  getOrderSessionById,
 };

@@ -43,6 +43,11 @@ const DiscountValueType = {
   ABSOLUTE: 'ABSOLUTE',
 };
 
+const PaymentMethod = {
+  CASH: 'CASH',
+  BANK_TRANSFER: 'BANK_TRANSFER',
+};
+
 module.exports = {
   SESSION_NAME_SPACE,
   Language,
@@ -52,4 +57,5 @@ module.exports = {
   RoundingPaymentType,
   OrderSessionDiscountType,
   DiscountValueType,
+  PaymentMethod,
 };

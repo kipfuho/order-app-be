@@ -5,7 +5,8 @@ const { getRestaurantFromCache, getTablesFromCache } = require('../../metadata/r
 const { getRestaurantTimeZone } = require('../../middlewares/clsHooked');
 const { Order, OrderSession } = require('../../models');
 const { getDishesFromCache } = require('../../metadata/dishMetadata.service');
-const { OrderSessionDiscountType, DiscountValueType } = require('../../utils/constant');
+const { OrderSessionDiscountType, DiscountValueType, OrderSessionStatus } = require('../../utils/constant');
+const { throwBadRequest } = require('../../utils/errorHandling');
 
 const formatDateTimeToISOStringRegardingReportTime = ({ dateTime, reportTime }) => {
   try {
@@ -285,8 +286,34 @@ const getOrderSessionById = async (orderSessionId) => {
   return orderSessionJson;
 };
 
+const _validateBeforePayment = (orderSession, paymentDetails) => {
+  throwBadRequest(
+    orderSession.paymentAmount !== _.sumBy(paymentDetails, 'paymentAmount'),
+    'Số tiền thanh toán không khớp số tiền đơn'
+  );
+};
+
+const confirmPaymentOrderSession = async ({ orderSessionId, paymentDetails }) => {
+  const orderSession = await getOrderSessionById(orderSessionId);
+
+  _validateBeforePayment(orderSession);
+
+  await OrderSession.updateOne(
+    { _id: orderSessionId },
+    {
+      $set: {
+        paymentDetails,
+        status: OrderSessionStatus.paid,
+      },
+    }
+  );
+
+  return getOrderSessionById(orderSessionId);
+};
+
 module.exports = {
   createNewOrder,
   getOrCreateOrderSession,
   getOrderSessionById,
+  confirmPaymentOrderSession,
 };

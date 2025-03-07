@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
 const { getRestaurantFromCache } = require('../../metadata/restaraurantMetadata.service');
 const { getStartTimeOfToday } = require('../../utils/common');
-const { PaymentMethod, Status } = require('../../utils/constant');
+const { PaymentMethod, OrderSessionStatus } = require('../../utils/constant');
 
-const StatusEnum = Object.values(Status);
+const StatusEnum = Object.values(OrderSessionStatus);
 const PaymentMethodEnum = Object.values(PaymentMethod);
 
 const discountProductSchema = mongoose.Schema(
@@ -55,13 +55,14 @@ const orderSessionSchema = mongoose.Schema(
     ],
     endedAt: { type: Date },
     auditedAt: { type: Date },
-    status: { type: String, enum: StatusEnum },
+    status: { type: String, enum: StatusEnum, default: OrderSessionStatus.unpaid },
     paymentDetails: [
       {
         paymentMethod: { type: String, enum: PaymentMethodEnum },
         paymentAmount: { type: Number },
       },
     ],
+    paymentAmount: { type: Number },
   },
   {
     timestamps: true,

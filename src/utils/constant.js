@@ -33,6 +33,12 @@ const Status = {
   disabled: 'disabled',
 };
 
+const OrderSessionStatus = {
+  unpaid: 'unpaid',
+  paid: 'paid',
+  cancelled: 'cancelled',
+};
+
 const OrderSessionDiscountType = {
   INVOICE: 'INVOICE',
   PRODUCT: 'PRODUCT',
@@ -58,4 +64,5 @@ module.exports = {
   OrderSessionDiscountType,
   DiscountValueType,
   PaymentMethod,
+  OrderSessionStatus,
 };

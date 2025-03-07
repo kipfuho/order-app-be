@@ -94,10 +94,10 @@ const getOrCreateOrderSession = async ({ orderSessionId, tableId, restaurantId }
   return orderSession.toJSON();
 };
 
-const createNewOrder = async ({ tableId, restaurantId, orderSessionId, newOrder, orderNo }) => {
+const createNewOrder = async ({ tableId, restaurantId, orderSessionId, dishOrders, orderNo }) => {
   const dishes = await getDishesFromCache({ restaurantId });
   const dishById = _.keyBy(dishes, 'id');
-  const dishOrders = newOrder.dishOrders.map((dishOrder) => {
+  const orderDishOrders = _.map(dishOrders, (dishOrder) => {
     const { dishId, quantity, name, taxRate, price, isTaxIncludedPrice } = dishOrder;
     if (!dishId) {
       return {
@@ -115,12 +115,12 @@ const createNewOrder = async ({ tableId, restaurantId, orderSessionId, newOrder,
       quantity,
       name: _.get(dish, 'name', name),
       unit: _.get(dish, 'unit', ''),
-      taxRate,
-      price: _.get(dish, 'unit', isTaxIncludedPrice ? null : price),
-      taxIncludedPrice: _.get(dish, 'unit', isTaxIncludedPrice ? price : null),
+      taxRate: _.get(dish, 'taxRate', ''),
+      price: _.get(dish, 'isTaxIncludedPrice') ? null : price,
+      taxIncludedPrice: _.get(dish, 'isTaxIncludedPrice') ? price : null,
     };
   });
-  const order = await Order.create({ tableId, restaurantId, orderSessionId, orderNo, dishOrders });
+  const order = await Order.create({ tableId, restaurantId, orderSessionId, orderNo, dishOrders: orderDishOrders });
 
   return order.toJSON();
 };

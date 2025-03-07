@@ -1,11 +1,12 @@
 const _ = require('lodash');
-const { Order, OrderSession } = require('../../models');
+const { Order, OrderSession, Cart } = require('../../models');
 const orderUtilService = require('./orderUtils.service');
 const { getTablesFromCache } = require('../../metadata/restaraurantMetadata.service');
+const { throwBadRequest } = require('../../utils/errorHandling');
 
-const createOrder = async ({ tableId, restaurantId, orderSessionId, newOrder }) => {
+const createOrder = async ({ tableId, restaurantId, orderSessionId, dishOrders }) => {
   const orderSession = await orderUtilService.getOrCreateOrderSession({ orderSessionId, tableId, restaurantId });
-  const order = await orderUtilService.createNewOrder({ tableId, restaurantId, orderSessionId, newOrder });
+  const order = await orderUtilService.createNewOrder({ tableId, restaurantId, orderSessionId, dishOrders });
   orderSession.orders = [order];
   return orderSession;
 };
@@ -114,9 +115,38 @@ const getOrderHistory = async ({ from, to }) => {
   return _.map(orderSessions, (orderSession) => orderSession.toJSON());
 };
 
-const updateCart = async ({ updatedishRequests, cartId }) => {};
+const updateCart = async ({ updatedishRequests, cartId }) => {
+  const cart = await Cart.findById(cartId);
+  throwBadRequest(!cart, 'Không tìm thấy giỏ hàng');
+  const cartItems = cart.cartItems || [];
+  const cartItemByDishId = _.keyBy(cartItems, '_id');
+  _.forEach(updatedishRequests, (updateRequest) => {
+    if (cartItemByDishId[_.get(updateRequest, 'dishId')]) {
+      cartItemByDishId[updateRequest.dishId].quantity = updateRequest.quantity || 0;
+      return;
+    }
 
-const checkoutCart = async ({ cartId }) => {};
+    cartItems.push(updateRequest);
+  });
+
+  return Cart.findByIdAndUpdate(cartId, { $set: cartItems });
+};
+
+const checkoutCart = async ({ cartId, tableId, restaurantId }) => {
+  const cart = await Cart.findById(cartId);
+  throwBadRequest(!cart, 'Không tìm thấy giỏ hàng');
+  throwBadRequest(_.isEmpty(cart.cartItems), 'Giỏ hàng rỗng');
+
+  const orderSession = await orderUtilService.getOrCreateOrderSession({ tableId, restaurantId });
+  const order = await orderUtilService.createNewOrder({
+    tableId,
+    restaurantId,
+    orderSessionId: orderSession.id,
+    dishOrders: cart.cartItems,
+  });
+  orderSession.orders = [order];
+  return orderSession;
+};
 
 const discountDish = async ({ dishOrderId, orderId }) => {};
 

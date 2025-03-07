@@ -12,3 +12,4 @@ module.exports.Department = require('../restaurant-management/models/department.
 module.exports.Order = require('../order-management/models/order.model').Order;
 module.exports.OrderSession = require('../order-management/models/orderSession.model').OrderSession;
 module.exports.OrderSessionReport = require('../order-management/models/orderSessionReport.model').OrderSessionReport;
+module.exports.Cart = require('../order-management/models/cart.model');

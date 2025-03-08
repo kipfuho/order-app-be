@@ -6,38 +6,38 @@ const { getRestaurantKey } = require('./common');
 const constant = require('../utils/constant');
 
 const _getRestaurantFromClsHook = ({ key }) => {
-  const restarantVal = getSession({ key });
-  const restaurant = _.get(restarantVal, 'restaurant');
+  const restaurantVal = getSession({ key });
+  const restaurant = _.get(restaurantVal, 'restaurant');
   return restaurant;
 };
 
 const _getTablesFromClsHook = ({ key }) => {
-  const restarantVal = getSession({ key });
-  const tables = _.get(restarantVal, 'tables');
+  const restaurantVal = getSession({ key });
+  const tables = _.get(restaurantVal, 'tables');
   return tables;
 };
 
 const _getTablePositionsFromClsHook = ({ key }) => {
-  const restarantVal = getSession({ key });
-  const tablePositions = _.get(restarantVal, 'tables');
+  const restaurantVal = getSession({ key });
+  const tablePositions = _.get(restaurantVal, 'tables');
   return tablePositions;
 };
 
 const _getEmployeesFromClsHook = ({ key }) => {
-  const restarantVal = getSession({ key });
-  const employees = _.get(restarantVal, 'employees');
+  const restaurantVal = getSession({ key });
+  const employees = _.get(restaurantVal, 'employees');
   return employees;
 };
 
 const _getEmployeePositionsFromClsHook = ({ key }) => {
-  const restarantVal = getSession({ key });
-  const employeePositions = _.get(restarantVal, 'employees');
+  const restaurantVal = getSession({ key });
+  const employeePositions = _.get(restaurantVal, 'employees');
   return employeePositions;
 };
 
 const _getDepartmentsFromClsHook = ({ key }) => {
-  const restarantVal = getSession({ key });
-  const departments = _.get(restarantVal, 'departments');
+  const restaurantVal = getSession({ key });
+  const departments = _.get(restaurantVal, 'departments');
   return departments;
 };
 
@@ -49,21 +49,25 @@ const getRestaurantFromCache = async ({ restaurantId }) => {
   }
 
   if (redisClient.isRedisConnected()) {
-    const restarantVal = await redisClient.getJson(key);
-    const restaurant = _.get(restarantVal, 'restaurant');
+    const restaurantVal = await redisClient.getJson(key);
+    const restaurant = _.get(restaurantVal, 'restaurant');
     if (!_.isEmpty(restaurant)) {
-      setSession({ key, value: restarantVal });
+      setSession({ key, value: restaurantVal });
       return restaurant;
     }
 
     const restaurantModel = await Restaurant.find({ _id: restaurantId, status: constant.Status.enabled });
     const restaurantJson = restaurantModel.toJSON();
-    redisClient.putJson({ key, jsonVal: { ...restarantVal, restaurant: restaurantJson } });
+    const newRestaurantVal = { ...restaurantVal, restaurant: restaurantJson };
+    redisClient.putJson({ key, jsonVal: newRestaurantVal });
+    setSession({ key, value: newRestaurantVal });
     return restaurantJson;
   }
 
+  const currentRestarantClsHookVal = getSession({ key });
   const restaurant = await Restaurant.find({ _id: restaurantId, status: constant.Status.enabled });
   const restaurantJson = restaurant.toJSON();
+  setSession({ key, value: { ...currentRestarantClsHookVal, restaurant: restaurantJson } });
   return restaurantJson;
 };
 
@@ -80,8 +84,8 @@ const getTableFromCache = async ({ restaurantId, tableId }) => {
   if (redisClient.isRedisConnected()) {
     const restaurantVal = await redisClient.getJson(key);
     const tables = _.get(restaurantVal, 'tables');
-    setSession({ key, value: { tables } });
     if (!_.isEmpty(tables)) {
+      setSession({ key, value: restaurantVal });
       return _.find(tables, (table) => table.id === tableId);
     }
   }
@@ -107,12 +111,16 @@ const getTablesFromCache = async ({ restaurantId }) => {
 
     const tableModels = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
     const tablesJson = tableModels.map((table) => table.toJSON());
-    redisClient.putJson({ key, jsonVal: { ...restaurantVal, tables: tablesJson } });
+    const newRestaurantVal = { ...restaurantVal, tables: tablesJson };
+    redisClient.putJson({ key, jsonVal: newRestaurantVal });
+    setSession({ key, value: newRestaurantVal });
     return tablesJson;
   }
 
+  const currentRestarantClsHookVal = getSession({ key });
   const tables = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
   const tablesJson = tables.map((table) => table.toJSON());
+  setSession({ key, value: { ...currentRestarantClsHookVal, tables: tablesJson } });
   return tablesJson;
 };
 
@@ -129,8 +137,8 @@ const getTablePositionFromCache = async ({ restaurantId, tablePostionId }) => {
   if (redisClient.isRedisConnected()) {
     const restaurantVal = await redisClient.getJson(key);
     const tablePostions = _.get(restaurantVal, 'tablePostions');
-    setSession({ key, value: { tablePostions } });
     if (!_.isEmpty(tablePostions)) {
+      setSession({ key, value: restaurantVal });
       return _.find(tablePostions, (tablePostion) => tablePostion.id === tablePostionId);
     }
   }
@@ -155,17 +163,21 @@ const getTablePositionsFromCache = async ({ restaurantId }) => {
     }
 
     const tablePostionModels = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
-      .populate('employeeCategories')
+      .populate('dishCategories')
       .populate('tables');
     const tablePostionsJson = tablePostionModels.map((tablePostion) => tablePostion.toJSON());
-    redisClient.putJson({ key, jsonVal: { ...restaurantVal, tablePostions: tablePostionsJson } });
+    const newRestaurantVal = { ...restaurantVal, tablePostions: tablePostionsJson };
+    redisClient.putJson({ key, jsonVal: newRestaurantVal });
+    setSession({ key, value: newRestaurantVal });
     return tablePostionsJson;
   }
 
+  const currentRestarantClsHookVal = getSession({ key });
   const tablePostions = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
-    .populate('employeeCategories')
+    .populate('dishCategories')
     .populate('tables');
   const tablePostionsJson = tablePostions.map((tablePostion) => tablePostion.toJSON());
+  setSession({ key, value: { ...currentRestarantClsHookVal, tablePostions: tablePostionsJson } });
   return tablePostionsJson;
 };
 
@@ -182,8 +194,8 @@ const getEmployeeFromCache = async ({ restaurantId, employeeId }) => {
   if (redisClient.isRedisConnected()) {
     const restaurantVal = await redisClient.getJson(key);
     const employees = _.get(restaurantVal, 'employees');
-    setSession({ key, value: { employees } });
     if (!_.isEmpty(employees)) {
+      setSession({ key, value: restaurantVal });
       return _.find(employees, (employee) => employee.id === employeeId);
     }
   }
@@ -211,14 +223,18 @@ const getEmployeesFromCache = async ({ restaurantId }) => {
       .populate('user')
       .populate('position');
     const employeesJson = employeeModels.map((employee) => employee.toJSON());
-    redisClient.putJson({ key, jsonVal: { ...restaurantVal, employees: employeesJson } });
+    const newRestaurantVal = { ...restaurantVal, employees: employeesJson };
+    redisClient.putJson({ key, jsonVal: newRestaurantVal });
+    setSession({ key, value: newRestaurantVal });
     return employeesJson;
   }
 
+  const currentRestarantClsHookVal = getSession({ key });
   const employees = await Employee.find({ restaurantId, status: constant.Status.enabled })
     .populate('user')
     .populate('position');
   const employeesJson = employees.map((employee) => employee.toJSON());
+  setSession({ key, value: { ...currentRestarantClsHookVal, employees: employeesJson } });
   return employeesJson;
 };
 
@@ -235,8 +251,8 @@ const getEmployeePositionFromCache = async ({ restaurantId, employeePositionId }
   if (redisClient.isRedisConnected()) {
     const restaurantVal = await redisClient.getJson(key);
     const employeePositions = _.get(restaurantVal, 'employeePositions');
-    setSession({ key, value: { employeePositions } });
     if (!_.isEmpty(employeePositions)) {
+      setSession({ key, value: restaurantVal });
       return _.find(employeePositions, (employeePosition) => employeePosition.id === employeePositionId);
     }
   }
@@ -262,12 +278,16 @@ const getEmployeePositionsFromCache = async ({ restaurantId }) => {
 
     const employeePositionModels = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
     const employeePositionsJson = employeePositionModels.map((employeePosition) => employeePosition.toJSON());
-    redisClient.putJson({ key, jsonVal: { ...restaurantVal, employeePositions: employeePositionsJson } });
+    const newRestaurantVal = { ...restaurantVal, employeePositions: employeePositionsJson };
+    redisClient.putJson({ key, jsonVal: newRestaurantVal });
+    setSession({ key, value: newRestaurantVal });
     return employeePositionsJson;
   }
 
+  const currentRestarantClsHookVal = getSession({ key });
   const employeePositions = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
   const employeePositionsJson = employeePositions.map((employeePosition) => employeePosition.toJSON());
+  setSession({ key, value: { ...currentRestarantClsHookVal, employeePositions: employeePositionsJson } });
   return employeePositionsJson;
 };
 
@@ -284,8 +304,8 @@ const getDepartmentFromCache = async ({ restaurantId, departmentId }) => {
   if (redisClient.isRedisConnected()) {
     const restaurantVal = await redisClient.getJson(key);
     const departments = _.get(restaurantVal, 'departments');
-    setSession({ key, value: { departments } });
     if (!_.isEmpty(departments)) {
+      setSession({ key, value: restaurantVal });
       return _.find(departments, (department) => department.id === departmentId);
     }
   }
@@ -311,12 +331,16 @@ const getDepartmentsFromCache = async ({ restaurantId }) => {
 
     const departmentModels = await Department.find({ restaurantId, status: constant.Status.enabled });
     const departmentsJson = departmentModels.map((department) => department.toJSON());
-    redisClient.putJson({ key, jsonVal: { ...restaurantVal, departments: departmentsJson } });
+    const newRestaurantVal = { ...restaurantVal, departments: departmentsJson };
+    redisClient.putJson({ key, jsonVal: newRestaurantVal });
+    setSession({ key, value: newRestaurantVal });
     return departmentsJson;
   }
 
+  const currentRestarantClsHookVal = getSession({ key });
   const departments = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
   const departmentsJson = departments.map((department) => department.toJSON());
+  setSession({ key, value: { ...currentRestarantClsHookVal, departments: departmentsJson } });
   return departmentsJson;
 };
 

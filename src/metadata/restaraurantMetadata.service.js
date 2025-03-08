@@ -5,6 +5,14 @@ const { Restaurant, Table, TablePosition, Employee, EmployeePosition, Department
 const { getRestaurantKey } = require('./common');
 const constant = require('../utils/constant');
 
+const deleteRestaurantFromCache = async (key) => {};
+
+const deleteTableFromCache = async (key) => {};
+
+const deleteEmployeeFromCache = async (key) => {};
+
+const deleteDepartmentFromCache = async (key) => {};
+
 const _getRestaurantFromClsHook = ({ key }) => {
   const restaurantVal = getSession({ key });
   const restaurant = _.get(restaurantVal, 'restaurant');

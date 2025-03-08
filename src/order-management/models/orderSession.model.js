@@ -47,6 +47,7 @@ const orderSessionSchema = mongoose.Schema(
     discounts: [discountSchema],
     orderSessionNo: { type: Number },
     taxRate: { type: Number },
+    totalTaxAmount: { type: Number },
     taxDetails: [
       {
         taxAmount: { type: Number },

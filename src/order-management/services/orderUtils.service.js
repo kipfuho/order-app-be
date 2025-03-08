@@ -266,6 +266,8 @@ const getOrderSessionById = async (orderSessionId) => {
 
   const pretaxPaymentAmount = _.sumBy(dishOrders, (dishOrder) => dishOrder.price * dishOrder.quantity);
   const { totalTaxAmount, taxDetails } = await calculateTax({ orderSessionJson, dishOrders });
+  orderSessionJson.totalTaxAmount = totalTaxAmount;
+  orderSessionJson.taxDetails = taxDetails;
 
   const totalDiscountAmountAfterTax = calculateDiscount({ orderSessionJson, pretaxPaymentAmount, totalTaxAmount });
 

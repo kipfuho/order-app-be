@@ -31,6 +31,8 @@ const RoundingPaymentType = {
 const Status = {
   enabled: 'enabled',
   disabled: 'disabled',
+  activated: 'activated',
+  deactivated: 'deactivated',
 };
 
 const OrderSessionStatus = {

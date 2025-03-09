@@ -1,6 +1,9 @@
+const _ = require('lodash');
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
 const { Status } = require('../../utils/constant');
+const { deleteRestaurantCache } = require('../../metadata/common');
+const logger = require('../../config/logger');
 
 const restaurantSchema = mongoose.Schema(
   {
@@ -35,6 +38,32 @@ const restaurantSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+restaurantSchema.post('save', async function (doc) {
+  try {
+    const restaurantId = _.get(doc, '_id');
+    if (!restaurantId) {
+      return;
+    }
+
+    await deleteRestaurantCache({ restaurantId });
+  } catch (err) {
+    logger.error(`error running post hook save of restaurant model`);
+  }
+});
+
+restaurantSchema.post(new RegExp('.*update.*', 'i'), async function () {
+  try {
+    const filter = this.getFilter();
+    const restaurantId = _.get(filter, '_id');
+    if (!restaurantId) {
+      return;
+    }
+    await deleteRestaurantCache({ restaurantId });
+  } catch (err) {
+    logger.error(`error running post hook update of restaurant model`);
+  }
+});
 
 // add plugin that converts mongoose to json
 restaurantSchema.plugin(toJSON);

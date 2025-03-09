@@ -60,6 +60,19 @@ const getRoundTaxAmount = (amount) => {
   return _getRoundPrice(amount, 'taxRoundingType');
 };
 
+/*
+ * eg: get restaurantId tu orderSession. co the restaurantId la object do populate.
+ * const restaurantId = getStringId({ object: orderSession, key: 'restaurantId' });
+ */
+const getStringId = ({ object, key }) => {
+  const id = _.get(object, `${key}.id`);
+  if (id && typeof id === 'string') {
+    return id;
+  }
+  const value = _.get(object, `${key}._id`) || _.get(object, key);
+  return _.toString(value);
+};
+
 module.exports = {
   sleep,
   getStartTimeOfToday,
@@ -67,4 +80,5 @@ module.exports = {
   getRoundDishPrice,
   getRoundDiscountAmount,
   getRoundTaxAmount,
+  getStringId,
 };

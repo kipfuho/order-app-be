@@ -11,7 +11,8 @@ const getRestaurant = catchAsync(async (req, res) => {
 
 const createRestaurant = catchAsync(async (req, res) => {
   const createBody = req.body;
-  const restaurant = await restaurantManagementService.createRestaurant(createBody);
+  const ownerUserId = _.get(req, 'user.id');
+  const restaurant = await restaurantManagementService.createRestaurant({ createBody, ownerUserId });
   res.status(httpStatus.CREATED).send({ restaurant });
 });
 

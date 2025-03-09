@@ -1,9 +1,11 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const { toJSON } = require('../../models/plugins');
-const { Status } = require('../../utils/constant');
+const { Status, RoundingPaymentType } = require('../../utils/constant');
 const { deleteRestaurantCache } = require('../../metadata/common');
 const logger = require('../../config/logger');
+
+const RoundingPaymentTypeEnum = Object.values(RoundingPaymentType);
 
 const restaurantSchema = mongoose.Schema(
   {
@@ -13,9 +15,9 @@ const restaurantSchema = mongoose.Schema(
     email: { type: String },
     owner: { type: mongoose.Types.ObjectId, ref: 'User' },
     taxRate: { type: Number },
-    dishPriceRoundingType: { type: String },
-    discountRoundingType: { type: String },
-    taxRoundingType: { type: String },
+    dishPriceRoundingType: { type: String, enum: RoundingPaymentTypeEnum, default: RoundingPaymentType.ROUND },
+    discountRoundingType: { type: String, enum: RoundingPaymentTypeEnum, default: RoundingPaymentType.ROUND },
+    taxRoundingType: { type: String, enum: RoundingPaymentTypeEnum, default: RoundingPaymentType.ROUND },
     calculateTaxDirectly: {
       type: Boolean,
     },

@@ -6,8 +6,7 @@ const { getRestaurantKey } = require('./common');
 const constant = require('../utils/constant');
 
 const _getRestaurantFromClsHook = ({ key }) => {
-  const restaurantVal = getSession({ key });
-  const restaurant = _.get(restaurantVal, 'restaurant');
+  const restaurant = getSession({ key });
   return restaurant;
 };
 
@@ -19,25 +18,22 @@ const getRestaurantFromCache = async ({ restaurantId }) => {
   }
 
   if (redisClient.isRedisConnected()) {
-    const restaurantVal = await redisClient.getJson(key);
-    const restaurant = _.get(restaurantVal, 'restaurant');
+    const restaurant = await redisClient.getJson(key);
     if (!_.isEmpty(restaurant)) {
-      setSession({ key, value: restaurantVal });
+      setSession({ key, value: restaurant });
       return restaurant;
     }
 
     const restaurantModel = await Restaurant.find({ _id: restaurantId, status: constant.Status.enabled });
     const restaurantJson = restaurantModel.toJSON();
-    const newRestaurantVal = { ...restaurantVal, restaurant: restaurantJson };
-    redisClient.putJson({ key, jsonVal: newRestaurantVal });
-    setSession({ key, value: newRestaurantVal });
+    redisClient.putJson({ key, jsonVal: restaurantJson });
+    setSession({ key, value: restaurantJson });
     return restaurantJson;
   }
 
-  const currentRestarantClsHookVal = getSession({ key });
   const restaurant = await Restaurant.find({ _id: restaurantId, status: constant.Status.enabled });
   const restaurantJson = restaurant.toJSON();
-  setSession({ key, value: { ...currentRestarantClsHookVal, restaurant: restaurantJson } });
+  setSession({ key, value: restaurantJson });
   return restaurantJson;
 };
 

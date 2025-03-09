@@ -8,6 +8,7 @@ const employeeSchema = mongoose.Schema(
     user: { type: mongoose.Types.ObjectId, ref: 'User' },
     name: { type: String },
     position: { type: mongoose.Types.ObjectId, ref: 'EmployeePosition' },
+    department: { type: mongoose.Types.ObjectId, ref: 'Department' },
     status: { type: String, enum: [Status.enabled, Status.disabled], default: Status.enabled },
     permissions: [String],
   },

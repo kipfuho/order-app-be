@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const { createNamespace, getNamespace } = require('cls-hooked');
 const logger = require('../config/logger');
-const { language, countries, SESSION_NAME_SPACE } = require('../utils/constant');
+const { Countries, SESSION_NAME_SPACE, Language } = require('../utils/constant');
 
 if (!getNamespace(SESSION_NAME_SPACE)) {
   createNamespace(SESSION_NAME_SPACE);
@@ -19,7 +19,7 @@ const clsHooked = (req, res, next) => {
     clsSession = getNamespace(SESSION_NAME_SPACE);
   }
   clsSession.run(() => {
-    clsSession.set('clientLanguage', _.get(req, 'headers.lang') || language.english);
+    clsSession.set('clientLanguage', _.get(req, 'headers.lang') || Language.english);
     clsSession.set('path', _.get(req, 'path') || '');
     next();
   });
@@ -98,18 +98,18 @@ const getRestaurantTimeZone = () => {
 
 const getRestaurantCountry = () => {
   const restaurant = getRestaurantFromSession();
-  return _.get(restaurant, 'country.name') || countries.VietNam.name;
+  return _.get(restaurant, 'country.name') || Countries.VietNam.name;
 };
 
 const getRestaurantCurrency = () => {
   const restaurant = getRestaurantFromSession();
-  return _.get(restaurant, 'country.currency') || countries.VietNam.currency;
+  return _.get(restaurant, 'country.currency') || Countries.VietNam.currency;
 };
 
 const getRestaurantLang = () => {
   const restaurant = getRestaurantFromSession();
   const country = _.get(restaurant, 'country.name');
-  if (country === countries.VietNam.name) {
+  if (country === Countries.VietNam.name) {
     return 'vi';
   }
   return 'en';

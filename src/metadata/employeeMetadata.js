@@ -63,7 +63,7 @@ const getEmployeesFromCache = async ({ restaurantId }) => {
       .populate('user')
       .populate('position')
       .populate('department');
-    const employeeJsons = employeeModels.map((employee) => {
+    const employeeJsons = _.map(employeeModels, (employee) => {
       const employeeJson = employee.toJSON();
       employeeJson.permissions = [...employeeJson.permissions, ..._.get(employeeJson, 'department.permissions')];
       return employeeJson;
@@ -77,7 +77,7 @@ const getEmployeesFromCache = async ({ restaurantId }) => {
     .populate('user')
     .populate('position')
     .populate('department');
-  const employeeJsons = employees.map((employee) => {
+  const employeeJsons = _.map(employees, (employee) => {
     const employeeJson = employee.toJSON();
     employeeJson.permissions = [...employeeJson.permissions, ..._.get(employeeJson, 'department.permissions')];
     return employeeJson;
@@ -124,14 +124,14 @@ const getEmployeePositionsFromCache = async ({ restaurantId }) => {
     }
 
     const employeePositionModels = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
-    const employeePositionJsons = employeePositionModels.map((employeePosition) => employeePosition.toJSON());
+    const employeePositionJsons = _.map(employeePositionModels, (employeePosition) => employeePosition.toJSON());
     redisClient.putJson({ key, jsonVal: employeePositionJsons });
     setSession({ key, value: employeePositionJsons });
     return employeePositionJsons;
   }
 
   const employeePositions = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
-  const employeePositionJsons = employeePositions.map((employeePosition) => employeePosition.toJSON());
+  const employeePositionJsons = _.map(employeePositions, (employeePosition) => employeePosition.toJSON());
   setSession({ key, value: employeePositionJsons });
   return employeePositionJsons;
 };
@@ -174,14 +174,14 @@ const getDepartmentsFromCache = async ({ restaurantId }) => {
     }
 
     const departmentModels = await Department.find({ restaurantId, status: constant.Status.enabled });
-    const departmentJsons = departmentModels.map((department) => department.toJSON());
+    const departmentJsons = _.map(departmentModels, (department) => department.toJSON());
     redisClient.putJson({ key, jsonVal: departmentJsons });
     setSession({ key, value: departmentJsons });
     return departmentJsons;
   }
 
   const departments = await EmployeePosition.find({ restaurantId, status: constant.Status.enabled });
-  const departmentJsons = departments.map((department) => department.toJSON());
+  const departmentJsons = _.map(departments, (department) => department.toJSON());
   setSession({ key, value: departmentJsons });
   return departmentJsons;
 };

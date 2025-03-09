@@ -53,14 +53,14 @@ const getTablesFromCache = async ({ restaurantId }) => {
     }
 
     const tableModels = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
-    const tableJsons = tableModels.map((table) => table.toJSON());
+    const tableJsons = _.map(tableModels, (table) => table.toJSON());
     redisClient.putJson({ key, jsonVal: tableJsons });
     setSession({ key, value: tableJsons });
     return tableJsons;
   }
 
   const tables = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
-  const tableJsons = tables.map((table) => table.toJSON());
+  const tableJsons = _.map(tables, (table) => table.toJSON());
   setSession({ key, value: tableJsons });
   return tableJsons;
 };
@@ -105,7 +105,7 @@ const getTablePositionsFromCache = async ({ restaurantId }) => {
     const tablePostionModels = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
       .populate('dishCategories')
       .populate('tables');
-    const tablePostionJsons = tablePostionModels.map((tablePostion) => tablePostion.toJSON());
+    const tablePostionJsons = _.map(tablePostionModels, (tablePostion) => tablePostion.toJSON());
     redisClient.putJson({ key, jsonVal: tablePostionJsons });
     setSession({ key, value: tablePostionJsons });
     return tablePostionJsons;
@@ -114,7 +114,7 @@ const getTablePositionsFromCache = async ({ restaurantId }) => {
   const tablePostions = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
     .populate('dishCategories')
     .populate('tables');
-  const tablePostionJsons = tablePostions.map((tablePostion) => tablePostion.toJSON());
+  const tablePostionJsons = _.map(tablePostions, (tablePostion) => tablePostion.toJSON());
   setSession({ key, value: tablePostionJsons });
   return tablePostionJsons;
 };

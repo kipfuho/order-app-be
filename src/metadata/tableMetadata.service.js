@@ -2,18 +2,16 @@ const _ = require('lodash');
 const redisClient = require('../utils/redis');
 const { getSession, setSession } = require('../middlewares/clsHooked');
 const { Table, TablePosition } = require('../models');
-const { getRestaurantKey } = require('./common');
+const { getTableKey, getTablePositionKey } = require('./common');
 const constant = require('../utils/constant');
 
 const _getTablesFromClsHook = ({ key }) => {
-  const restaurantVal = getSession({ key });
-  const tables = _.get(restaurantVal, 'tables');
+  const tables = getSession({ key });
   return tables;
 };
 
 const _getTablePositionsFromClsHook = ({ key }) => {
-  const restaurantVal = getSession({ key });
-  const tablePositions = _.get(restaurantVal, 'tables');
+  const tablePositions = getSession({ key });
   return tablePositions;
 };
 
@@ -21,17 +19,17 @@ const getTableFromCache = async ({ restaurantId, tableId }) => {
   if (!tableId) {
     return;
   }
-  const key = getRestaurantKey({ restaurantId });
+
+  const key = getTableKey({ restaurantId });
   const clsHookTables = _getTablesFromClsHook({ key });
   if (!_.isEmpty(clsHookTables)) {
     return _.find(clsHookTables, (table) => table.id === tableId);
   }
 
   if (redisClient.isRedisConnected()) {
-    const restaurantVal = await redisClient.getJson(key);
-    const tables = _.get(restaurantVal, 'tables');
+    const tables = await redisClient.getJson(key);
     if (!_.isEmpty(tables)) {
-      setSession({ key, value: restaurantVal });
+      setSession({ key, value: tables });
       return _.find(tables, (table) => table.id === tableId);
     }
   }
@@ -41,50 +39,47 @@ const getTableFromCache = async ({ restaurantId, tableId }) => {
 };
 
 const getTablesFromCache = async ({ restaurantId }) => {
-  const key = getRestaurantKey({ restaurantId });
+  const key = getTableKey({ restaurantId });
   const clsHookTables = _getTablesFromClsHook({ key });
   if (!_.isEmpty(clsHookTables)) {
     return clsHookTables;
   }
 
   if (redisClient.isRedisConnected()) {
-    const restaurantVal = await redisClient.getJson(key);
-    const tables = _.get(restaurantVal, 'tables');
+    const tables = await redisClient.getJson(key);
     if (!_.isEmpty(tables)) {
-      setSession({ key, value: restaurantVal });
+      setSession({ key, value: tables });
       return tables;
     }
 
     const tableModels = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
-    const tablesJson = tableModels.map((table) => table.toJSON());
-    const newRestaurantVal = { ...restaurantVal, tables: tablesJson };
-    redisClient.putJson({ key, jsonVal: newRestaurantVal });
-    setSession({ key, value: newRestaurantVal });
-    return tablesJson;
+    const tableJsons = tableModels.map((table) => table.toJSON());
+    redisClient.putJson({ key, jsonVal: tableJsons });
+    setSession({ key, value: tableJsons });
+    return tableJsons;
   }
 
-  const currentRestarantClsHookVal = getSession({ key });
   const tables = await Table.find({ restaurantId, status: constant.Status.enabled }).populate('position');
-  const tablesJson = tables.map((table) => table.toJSON());
-  setSession({ key, value: { ...currentRestarantClsHookVal, tables: tablesJson } });
-  return tablesJson;
+  const tableJsons = tables.map((table) => table.toJSON());
+  setSession({ key, value: tableJsons });
+  return tableJsons;
 };
 
 const getTablePositionFromCache = async ({ restaurantId, tablePostionId }) => {
   if (!tablePostionId) {
     return;
   }
-  const key = getRestaurantKey({ restaurantId });
+
+  const key = getTablePositionKey({ restaurantId });
   const clsHookTablePositions = _getTablePositionsFromClsHook({ key });
   if (!_.isEmpty(clsHookTablePositions)) {
     return _.find(clsHookTablePositions, (tablePostion) => tablePostion.id === tablePostionId);
   }
 
   if (redisClient.isRedisConnected()) {
-    const restaurantVal = await redisClient.getJson(key);
-    const tablePostions = _.get(restaurantVal, 'tablePostions');
+    const tablePostions = await redisClient.getJson(key);
     if (!_.isEmpty(tablePostions)) {
-      setSession({ key, value: restaurantVal });
+      setSession({ key, value: tablePostions });
       return _.find(tablePostions, (tablePostion) => tablePostion.id === tablePostionId);
     }
   }
@@ -94,37 +89,34 @@ const getTablePositionFromCache = async ({ restaurantId, tablePostionId }) => {
 };
 
 const getTablePositionsFromCache = async ({ restaurantId }) => {
-  const key = getRestaurantKey({ restaurantId });
+  const key = getTablePositionKey({ restaurantId });
   const clsHookTablePositions = _getTablePositionsFromClsHook({ key });
   if (!_.isEmpty(clsHookTablePositions)) {
     return clsHookTablePositions;
   }
 
   if (redisClient.isRedisConnected()) {
-    const restaurantVal = await redisClient.getJson(key);
-    const tablePostions = _.get(restaurantVal, 'tablePostions');
+    const tablePostions = await redisClient.getJson(key);
     if (!_.isEmpty(tablePostions)) {
-      setSession({ key, value: restaurantVal });
+      setSession({ key, value: tablePostions });
       return tablePostions;
     }
 
     const tablePostionModels = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
       .populate('dishCategories')
       .populate('tables');
-    const tablePostionsJson = tablePostionModels.map((tablePostion) => tablePostion.toJSON());
-    const newRestaurantVal = { ...restaurantVal, tablePostions: tablePostionsJson };
-    redisClient.putJson({ key, jsonVal: newRestaurantVal });
-    setSession({ key, value: newRestaurantVal });
-    return tablePostionsJson;
+    const tablePostionJsons = tablePostionModels.map((tablePostion) => tablePostion.toJSON());
+    redisClient.putJson({ key, jsonVal: tablePostionJsons });
+    setSession({ key, value: tablePostionJsons });
+    return tablePostionJsons;
   }
 
-  const currentRestarantClsHookVal = getSession({ key });
   const tablePostions = await TablePosition.find({ restaurantId, status: constant.Status.enabled })
     .populate('dishCategories')
     .populate('tables');
-  const tablePostionsJson = tablePostions.map((tablePostion) => tablePostion.toJSON());
-  setSession({ key, value: { ...currentRestarantClsHookVal, tablePostions: tablePostionsJson } });
-  return tablePostionsJson;
+  const tablePostionJsons = tablePostions.map((tablePostion) => tablePostion.toJSON());
+  setSession({ key, value: tablePostionJsons });
+  return tablePostionJsons;
 };
 
 module.exports = {
